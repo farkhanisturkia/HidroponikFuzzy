@@ -51,7 +51,6 @@ Route::middleware('splade')->group(function () {
                     $hidroponiks_id[]   = $hidroponik->id;
                 }
             }
-            // dd($hidroponiks, $hidroponiks_id);
             
             $jumlahs =[];
             $ppms =[];
@@ -67,7 +66,6 @@ Route::middleware('splade')->group(function () {
                     }
                 }
             }
-            // dd($jumlahs, $ppms);
 
             return view('dashboard',[
                 'hidroponiks'   => $hidroponiks,
@@ -91,7 +89,7 @@ Route::middleware('splade')->group(function () {
         Route::delete('/{data}', [DataController::class, 'destroy'])->name('destroy');
     });
 
-    Route::prefix('fuzzy')->name('fuzzy.')->group(function (){
+    Route::prefix('fuzzy')->name('fuzzy.')->group(function () {
         Route::get('/{data}', [FuzzyController::class, 'show'])->name('show');
     });
 
