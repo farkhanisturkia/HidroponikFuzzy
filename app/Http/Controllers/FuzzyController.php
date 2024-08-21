@@ -11,24 +11,25 @@ class FuzzyController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Request $request, Data $data)
+    public function show(Request $request, $data)
     {
+        $Data           = Data::where('id', $data)->first();
         $hidroponik_id  = $request->input('hidroponik_id');
         $ppm_id         = $request->input('ppm_id');
         
         //----------------deklarasi
-        $datas = Data::select('jumlah')->where('hidroponik_id', $hidroponik_id)->get();
+        $datas = Data::where('hidroponik_id', $hidroponik_id)->where('id', '<', $data)->get();
 
-        $maxJ = $datas->max('jumlah');
-        $minJ = $datas->min('jumlah');
+        $maxJ = $datas->max('jumlah') == null ? 0 : $datas->max('jumlah');
+        $minJ = $datas->min('jumlah') == null ? 0 : $datas->min('jumlah');
 
         if ($datas->count('jumlah') == 0) {
-            $meanJ = "";
-            $lastJ = "";
+            $meanJ = 0;
         }else {
             $meanJ = $datas->sum('jumlah')/$datas->count('jumlah');
-            $lastJ = Data::select('jumlah')->where('id', $data->id)->first()->jumlah;
         }
+
+        $lastJ = Data::where('id', $Data->id)->first()->jumlah;
         
         $Datappm = Ppm::where('id', $ppm_id)->first()->toArray();
 
@@ -36,7 +37,7 @@ class FuzzyController extends Controller
         $minP = $Datappm['min'];
         $meanP = ($maxP + $minP) / 2;
 
-        $lastP    = Data::select('ppm')->where('id', $data->id)->first()->ppm;
+        $lastP    = Data::where('id', $Data->id)->first()->ppm;
 
         //------------------fuzzifikasi
         //Jumlah Tanaman
@@ -86,34 +87,37 @@ class FuzzyController extends Controller
         // -------------------- Inferensi
         // rule base
         $rule1 = min($JTSedikit,$NPRendah); //KBaik
+        $z1    = (400 * $rule1) + 100;
         $rule2 = min($JTSedikit,$NPSedang); //KBaik
+        $z2    = (400 * $rule2) + 100;
         $rule3 = min($JTSedikit,$NPTinggi); //KBuruk
+        $z3    = 500 - (400 * $rule3);
         $rule4 = min($JTSedang,$NPRendah); //KBuruk
+        $z4    = 500 - (400 * $rule4);
         $rule5 = min($JTSedang,$NPSedang); //KBaik
+        $z5    = (400 * $rule5) + 100;
         $rule6 = min($JTSedang,$NPTinggi); //KBuruk
+        $z6    = 500 - (400 * $rule6);
         $rule7 = min($JTBanyak,$NPRendah); //KBuruk
+        $z7    = 500 - (400 * $rule7);
         $rule8 = min($JTBanyak,$NPSedang); //KBaik
+        $z8    = (400 * $rule8) + 100;
         $rule9 = min($JTBanyak,$NPTinggi); //KBaik
+        $z9    = (400 * $rule9) + 100;
 
         //-------------------- Defuzifikasi
+        $pembilang = ($rule1 * $z1) + ($rule2 * $z2) + ($rule3 * $z3) + ($rule4 * $z4) + ($rule5 * $z5) + ($rule6 * $z6) + ($rule7 * $z7) + ($rule8 * $z8) + ($rule9 * $z9);
+        $penyebut = $rule1 + $rule2 + $rule3 + $rule4 + $rule5 + $rule6 + $rule7 + $rule8 + $rule9;
+        $z = $pembilang / $penyebut;
+        
         $KBuruk = 100;
         $KBaik = 500;
         $KTengah = ($KBaik + $KBuruk) / 2;
 
-        $BaseKBuruk = ($rule3 * $KBuruk) + ($rule4 * $KBuruk) + ($rule6 * $KBuruk) + ($rule7 * $KBuruk);
-        $BaseKBaik  = ($rule1 * $KBaik) + ($rule2 * $KBaik) + ($rule5 * $KBaik) + ($rule8 * $KBaik) + ($rule9 * $KBaik);
-        $BaseKTotal = $BaseKBuruk + $BaseKBaik;
-
-        $DEFBuruk = $rule3 + $rule4 + $rule6 + $rule7;
-        $DEFBaik = $rule1 + $rule2 + $rule5 + $rule8 + $rule9;
-        $DEFTotal = $DEFBaik + $DEFBuruk;
-
-        $output = $BaseKTotal / $DEFTotal;
-
-        if ($output <= $KTengah) {
+        if ($z <= $KTengah) {
             $Kondisi = 'buruk';
         }
-        elseif($output > $KTengah){
+        elseif($z > $KTengah){
             $Kondisi =  'baik';
         }
 
@@ -144,7 +148,7 @@ class FuzzyController extends Controller
             'rule8' => $rule8,
             'rule9' => $rule9,
 
-            'output' => $output,
+            'output' => $z,
             'kondisi' => $Kondisi,
         ]);
     }
