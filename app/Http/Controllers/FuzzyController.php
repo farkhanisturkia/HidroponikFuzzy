@@ -17,7 +17,11 @@ class FuzzyController extends Controller
         $ppm_id         = $request->input('ppm_id');
         
         //----------------deklarasi
-        $datas = Data::select('jumlah')->where('hidroponik_id', $hidroponik_id)->get();
+        $date = Data::where('id', $data->id)->get('tanggal');
+        $datas = Data::select('jumlah')
+                 ->where('hidroponik_id', $hidroponik_id)
+                 ->where('tanggal', '<=', $date[0]['tanggal'])
+                 ->get();
 
         $maxJ = $datas->max('jumlah');
         $minJ = $datas->min('jumlah');
