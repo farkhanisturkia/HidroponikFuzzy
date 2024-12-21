@@ -148,7 +148,6 @@ class FuzzyController extends Controller
             'rule8' => $rule8,
             'rule9' => $rule9,
 
-            'output' => $output,
             'kondisi' => $Kondisi,
         ]);
     }
