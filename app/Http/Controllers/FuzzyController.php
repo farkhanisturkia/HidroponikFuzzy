@@ -17,10 +17,10 @@ class FuzzyController extends Controller
         $ppm_id         = $request->input('ppm_id');
         
         //----------------deklarasi
-        $date = Data::where('id', $data->id)->get('tanggal');
+        $date = Data::where('id', $data->id)->first()->tanggal;
         $datas = Data::select('jumlah')
                  ->where('hidroponik_id', $hidroponik_id)
-                 ->where('tanggal', '<=', $date[0]['tanggal'])
+                 ->where('tanggal', '<=', $date)
                  ->get();
 
         $maxJ = $datas->max('jumlah');
