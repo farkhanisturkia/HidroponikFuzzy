@@ -92,7 +92,7 @@ Route::middleware('splade')->group(function () {
     });
 
     Route::prefix('fuzzy')->name('fuzzy.')->group(function (){
-        Route::get('/{data}', [FuzzyController::class, 'show'])->name('show');
+        Route::get('/{data}', [FuzzyController::class, 'show'])->name('show')->middleware('auth');
     });
 
     Route::resource('hidroponik', HidroponikController::class)->middleware('auth');
